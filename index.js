@@ -16,12 +16,11 @@ module.exports = {
 
     var Compiler = require(this.templateCompilerPath());
     var PrecompileInlineHTMLBarsPlugin = HTMLBarsInlinePrecompilePlugin(Compiler.precompile);
-
+    PrecompileInlineHTMLBarsPlugin._identifier = 'babel-plugin-htmlbars-inline-precompile';
     // add the HTMLBarsInlinePrecompilePlugin to the list of plugins used by
     // the `ember-cli-babel` addon
-    if (!this._registeredWithBabel) {
+    if (!this._registeredWithBabel(app)) {
       app.options.babel.plugins.push(PrecompileInlineHTMLBarsPlugin);
-      this._registeredWithBabel = true;
     }
   },
 
@@ -40,5 +39,11 @@ module.exports = {
     }
 
     return path.resolve(this.project.root, templateCompilerPath);
+  },
+
+  _registeredWithBabel: function (app) {
+    return app.options.babel.plugins.some(function (plugin) {
+      return plugin._identifier === 'babel-plugin-htmlbars-inline-precompile';
+    });
   }
 };
