@@ -46,6 +46,11 @@ module.exports = {
     let isProjectDependency = this.parent === this.project;
     let babelPlugins;
 
+    var PrecompileInlineHTMLBarsPlugin = HTMLBarsInlinePrecompilePlugin(Compiler.precompile, {
+      cacheKey: [templateCompilerCacheKey].concat(pluginInfo.cacheKeys).join('|')
+    });
+    PrecompileInlineHTMLBarsPlugin._identifier = 'babel-plugin-htmlbars-inline-precompile';
+
     if (emberCLIUsesSharedBabelPlugins && isProjectDependency) {
       addonOptions.babel6 = addonOptions.babel6 || {};
       babelPlugins = addonOptions.babel6.plugins = addonOptions.babel6.plugins || [];
@@ -58,7 +63,10 @@ module.exports = {
 
     // add the HTMLBarsInlinePrecompilePlugin to the list of plugins used by
     // the `ember-cli-babel` addon
-    if (!this._registeredWithBabel) {
+
+    if (!this._registeredWithBabel(app)) {
+      app.options.babel.plugins.push(PrecompileInlineHTMLBarsPlugin);
+
       let templateCompilerPath = this.templateCompilerPath();
       let parallelConfig = this.getParallelConfig(pluginWrappers);
       let pluginInfo = this.astPlugins();
@@ -97,6 +105,7 @@ module.exports = {
         babelPlugins.push(htmlBarsPlugin);
       }
       this._registeredWithBabel = true;
+
     }
   },
 
@@ -161,5 +170,10 @@ module.exports = {
     }
 
     return path.resolve(this.project.root, templateCompilerPath);
-  }
+},
+_registeredWithBabel: function (app) {
+   return app.options.babel.plugins.some(function (plugin) {
+     return plugin._identifier === 'babel-plugin-htmlbars-inline-precompile';
+   });
+ }
 };
